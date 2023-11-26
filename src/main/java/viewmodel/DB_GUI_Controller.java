@@ -2,6 +2,7 @@ package viewmodel;
 
 import dao.DbConnectivityClass;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -41,6 +42,8 @@ public class DB_GUI_Controller implements Initializable {
     private TableColumn<Person, Integer> tv_id;
     @FXML
     private TableColumn<Person, String> tv_fn, tv_ln, tv_department, tv_major, tv_email;
+    @FXML
+    private Button editBtn, deleteBtn, addBtn;
     private final DbConnectivityClass cnUtil = new DbConnectivityClass();
     private final ObservableList<Person> data = cnUtil.getData();
 
@@ -54,6 +57,17 @@ public class DB_GUI_Controller implements Initializable {
             tv_major.setCellValueFactory(new PropertyValueFactory<>("major"));
             tv_email.setCellValueFactory(new PropertyValueFactory<>("email"));
             tv.setItems(data);
+            editBtn.setDisable(true);
+            deleteBtn.setDisable(true);
+            setupFieldListeners();
+            addBtn.setDisable(true);
+
+            tv.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+                editBtn.setDisable(newSelection == null);
+            });
+            tv.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+                deleteBtn.setDisable(newSelection == null);
+            });
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -212,6 +226,30 @@ public class DB_GUI_Controller implements Initializable {
             MyLogger.makeLog(
                     results.fname + " " + results.lname + " " + results.major);
         });
+
+    }
+    private boolean validateFields() {
+        boolean isValidFirstName = !first_name.getText().trim().isEmpty();
+        boolean isValidLastName = !last_name.getText().trim().isEmpty();
+        boolean isValidDepartment = !department.getText().trim().isEmpty();
+        boolean isValidEmail = email.getText().trim().matches("^[A-Za-z0-9+_.-]+@(.+)$");
+        boolean isValidImageURL = !imageURL.getText().trim().isEmpty();
+        boolean isValidMajor = !major.getText().trim().isEmpty();
+
+        return isValidFirstName && isValidLastName && isValidDepartment && isValidEmail && isValidImageURL && isValidMajor;
+    }
+
+    private void setupFieldListeners() {
+        ChangeListener<String> fieldListener = (observable, oldValue, newValue) -> {
+            addBtn.setDisable(!validateFields());
+        };
+
+        first_name.textProperty().addListener(fieldListener);
+        last_name.textProperty().addListener(fieldListener);
+        department.textProperty().addListener(fieldListener);
+        email.textProperty().addListener(fieldListener);
+        imageURL.textProperty().addListener(fieldListener);
+        major.textProperty().addListener(fieldListener);
     }
 
     private static enum Major {Business, CSC, CPIS}
@@ -227,6 +265,7 @@ public class DB_GUI_Controller implements Initializable {
             this.lname = date;
             this.major = venue;
         }
+
     }
 
 }
